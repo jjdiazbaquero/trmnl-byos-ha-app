@@ -9,9 +9,8 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-PORT           = int(os.environ.get("PORT", "10001"))
-IMAGE_BASE_URL = os.environ.get("IMAGE_BASE_URL", "")
-REFRESH_RATE   = int(os.environ.get("REFRESH_RATE", "300"))
+
+options = json.loads("options.json").read_text(encoding="utf-8")
 
 _devices = {}                     # norm_mac -> {api_key, friendly_id, registered}
 _counter = 0
@@ -72,7 +71,7 @@ class Handler(BaseHTTPRequestHandler):
             "status": 200,
             "api_key": dev["api_key"],
             "friendly_id": dev["friendly_id"],
-            "image_url": IMAGE_BASE_URL,          # one‑shot setup image
+            "image_url": options['IMAGE_BASE_URL'],          # one‑shot setup image
             "message": f"Registered as {dev['friendly_id']}",
         })
 
@@ -92,9 +91,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._json(200, {
             "status": 0,
-            "image_url": IMAGE_BASE_URL,
+            "image_url": options['IMAGE_BASE_URL'],
             "filename": next_filename(),           # <- unique id / cache key
-            "refresh_rate": REFRESH_RATE,
+            "refresh_rate": options['REFRESH_RATE'],
             "reset_firmware": False,
             "update_firmware": False,
             "special_function": "identify",
@@ -126,6 +125,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    srv = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
-    print(f"[trmnl] listening on 0.0.0.0:{PORT}  image_url={IMAGE_BASE_URL}", flush=True)
+    srv = ThreadingHTTPServer(("0.0.0.0", options['PORT']), Handler)
+    print(f"[trmnl] listening on 0.0.0.0:{options['PORT']}  image_url={options['IMAGE_BASE_URL']}", flush=True)
     srv.serve_forever()

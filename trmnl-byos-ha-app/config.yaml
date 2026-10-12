@@ -20,3 +20,5 @@ schema:
   port: port
   image_base_url: str
   refresh_rate: int
+ports:
+  10001/tcp: 10001
