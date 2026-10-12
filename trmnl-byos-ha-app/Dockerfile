@@ -1,12 +1,13 @@
 FROM python:3.12-alpine
 
-# Create a non‑root user
-RUN addgroup -S app && adduser -S app -G app
-
 WORKDIR /app
+
+# Copy and prepare the entrypoint script as root
+COPY run.sh /run.sh
+RUN chmod a+x /run.sh
+
+# Copy application files and set ownership
 COPY server.py /app/server.py
-RUN chown -R app:app /app
-USER app
 
 EXPOSE 10001
-CMD ["python", "-u", "server.py"]
+CMD ["/run.sh"]

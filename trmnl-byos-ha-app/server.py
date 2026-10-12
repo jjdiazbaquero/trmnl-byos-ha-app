@@ -9,13 +9,22 @@ import uuid
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import urlparse
 
-
-options = json.loads("options.json").read_text(encoding="utf-8")
-
 _devices = {}                     # norm_mac -> {api_key, friendly_id, registered}
 _counter = 0
 _lock = threading.Lock()
 
+
+CONFIG_PATH = "/data/options.json"
+
+def load_options():
+  """Loads the user options from the Home Assistant add-on config file."""
+  if os.path.exists(CONFIG_PATH):
+    try:
+      with open(CONFIG_PATH, "r") as f:
+        return json.load(f)
+    except Exception as e:
+      print(f"Error reading options file: {e}")
+  return {}
 
 def norm_mac(mac: str) -> str:
     return mac.replace(":", "").replace("-", "").lower()
@@ -71,7 +80,7 @@ class Handler(BaseHTTPRequestHandler):
             "status": 200,
             "api_key": dev["api_key"],
             "friendly_id": dev["friendly_id"],
-            "image_url": options['IMAGE_BASE_URL'],          # one‑shot setup image
+            "image_url": CONFIG['image_base_url'],          # one‑shot setup image
             "message": f"Registered as {dev['friendly_id']}",
         })
 
@@ -91,9 +100,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         self._json(200, {
             "status": 0,
-            "image_url": options['IMAGE_BASE_URL'],
+            "image_url": CONFIG['image_base_url'],
             "filename": next_filename(),           # <- unique id / cache key
-            "refresh_rate": options['REFRESH_RATE'],
+            "refresh_rate": CONFIG['refresh_rate'],
             "reset_firmware": False,
             "update_firmware": False,
             "special_function": "identify",
@@ -125,6 +134,8 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    srv = ThreadingHTTPServer(("0.0.0.0", options['PORT']), Handler)
-    print(f"[trmnl] listening on 0.0.0.0:{options['PORT']}  image_url={options['IMAGE_BASE_URL']}", flush=True)
+    CONFIG = load_options()
+    print(CONFIG)
+    srv = ThreadingHTTPServer(("0.0.0.0", CONFIG['port']), Handler)
+    print(f"[trmnl] listening on 0.0.0.0:{CONFIG['port']}  image_url={CONFIG['image_base_url']}", flush=True)
     srv.serve_forever()
