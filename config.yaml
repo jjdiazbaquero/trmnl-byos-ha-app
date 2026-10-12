@@ -1,0 +1,24 @@
+name: TRMNL BYOS Server
+description: >-
+  Minimal TRMNL BYOS API (setup / display / log).
+  The image is rendered by an external service; a unique
+  filename cache key is generated on every poll.
+version: "1.0.0"
+slug: trmnl_server
+architecture:
+  - amd64
+  - aarch64
+  - armv7
+  - armhf
+init: false
+startup: application      # shows a Start/Stop button
+boot: auto                # starts with HA
+network: host             # device reaches it at http://<ha-ip>:<port>
+options:
+  port: 10001
+  image_base_url: http://192.168.178.40:10000/render
+  refresh_rate: 300
+schema:
+  port: port
+  image_base_url: str
+  refresh_rate: int
